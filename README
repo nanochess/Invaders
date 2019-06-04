@@ -13,6 +13,10 @@ Move with keyboard arrows to left and right, press Space to shoot.
 As it uses the PUSHA/POPA instructions it only works in 80286 and
 higher.
 
+A small video of the game running over emulation:
+
+  https://www.youtube.com/watch?v=pC976eejfms
+
 If you want to assemble it, you must download the Netwide Assembler
 (nasm) from www.nasm.us
 
