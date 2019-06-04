@@ -1,0 +1,28 @@
+Invaders game in 512 bytes (boot sector or COM file)
+by Oscar Toledo G. Jun/04/2019
+
+http://nanochess.org
+https://github.com/nanochess
+
+This a game recreating the Invaders game in 512 bytes, that can be
+run as a COM file or put into a boot sector of a floppy disk to be
+run.
+
+Move with keyboard arrows to left and right, press Space to shoot.
+
+As it uses the PUSHA/POPA instructions it only works in 80286 and
+higher.
+
+If you want to assemble it, you must download the Netwide Assembler
+(nasm) from www.nasm.us
+
+Use this command line:
+
+  nasm -f bin invaders.asm -Dcom_file=1 -o invaders.com
+
+Tested with VirtualBox for Mac OS X running Windows XP running this
+game, it also works with DosBox and probably with qemu:
+
+  qemu-system-x86_64 -fda invaders.com
+
+Enjoy it!
