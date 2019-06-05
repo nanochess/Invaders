@@ -18,16 +18,18 @@
         ;                        about thing being hit.
         ; Revision: Jun/03/2019. Optimized, 601 bytes as COM!!!
         ; Revision: Jun/04/2019. At last 512 bytes!
-        ; Revision: Jun/05/2019. By popular demand added pure8088 option.
+        ; Revision: Jun/05/2019. By popular demand added pure8088 option. Now
+        ;                        the 8088 version also is bootable! so now
+        ;                        8088 is the default.
         ;
 
         ;
-        ; The usage of PUSHA and POPA means it requires 80286 or higher
+        ; Using PUSHA and POPA the code can be smaller, not enabled by
+        ; default.
         ;
 
     %ifndef pure8088            ; If not defined create a 80286 binary
-pure8088:       equ 0           ; Enable this for pure 8088, caveat! it
-                                ; will exceed 512 bytes.
+pure8088:       equ 1           ; Enable this for pure 8088
     %endif
 
     %ifndef com_file            ; If not defined create a boot sector
@@ -84,11 +86,9 @@ restart_game:
         ; Setup descend state
         ;
         mov ax,[di]     ; al now contains level, ah contains lives
-        cmp al,0x20     ; Maximum level?
-        je in36         ; Yes, don't increase
         inc ax          ; Increase by 2 (so invaders descend correctly)
         inc ax
-in36:   stosw           ; Advance level
+        stosw           ; Advance level
         mov ah,al
         xchg ax,dx      ; Shouldn't damage DX starting here
 
@@ -168,7 +168,6 @@ in2:
         inc bp
         and bp,7                ; Each 8 invaders
     %if pure8088
-        push cx
         push dx
         push si
         push bp
@@ -307,7 +306,6 @@ in43:
         pop bp
         pop si
         pop dx
-        pop cx
     %else
         popa
     %endif
@@ -360,7 +358,7 @@ in45:   cmp word [di],0
         scasw
         loop in45
 in44:
-        mov [di],bx   ; Start invader shot
+        mov [di],bx     ; Start invader shot
 in4:
         jmp in6
 
@@ -374,8 +372,7 @@ bitmaps:
         ;
         ; Draw 1 pixel inside reg. al (bit 7)
         ;
-bit:    mov ax,dx
-        jc big_pixel
+bit:    jc big_pixel
 zero:   xor ax,ax
 big_pixel:
         mov [di+X_WIDTH],ax
@@ -387,24 +384,21 @@ big_pixel:
         ; di = Target address
 draw_sprite:
     %if pure8088
-        push ax
-        push bx
         push cx
-        push dx
         push di
         pushf
     %else
         pusha
     %endif
-        mov dl,ah
-        mov dh,ah
 in3:    push ax
         mov bx,bitmaps
         cs xlat                 ; Extract one byte from bitmap
         xchg ax,bx
         mov cx,10               ; Two extra zero pixels at left and right
         clc                     ; Left pixel as zero (clean)
-in0:    call bit                ; Draw pixel
+in0:    mov al,bh
+        mov ah,bh
+        call bit                ; Draw pixel
         shl bl,1
         loop in0
         add di,OFFSET_X-20      ; Go to next video line
@@ -415,18 +409,16 @@ in0:    call bit                ; Draw pixel
     %if pure8088
         popf
         pop di
-        pop dx
         pop cx
-        pop bx
-        pop ax
     %else
         popa
     %endif
         ret
 
     %if pure8088
+        db 'O'
     %else
-        db 'Oscar'              ; Rounding
+        db 'OscarToledo'        ; Rounding
     %endif
     %if com_file
     %else

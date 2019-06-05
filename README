@@ -10,9 +10,10 @@ run.
 
 Move with keyboard arrows to left and right, press Space to shoot.
 
-As it uses the PUSHA/POPA instructions it only works in 80286 and
-higher. The source code has the option to assemble for 8088 with
-usage of some extra bytes. (530 bytes total in my last count) 
+Now it's compatible with 8088 (the original IBM PC) but it still
+has the option for 80286 code in the source code. So you now have
+to look for a 8-bit compatible VGA card if you want to run it in
+original hardware ;)
 
 A small video of the game running over emulation:
 
