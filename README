@@ -11,7 +11,7 @@ run.
 Move with keyboard arrows to left and right, press Space to shoot.
 
 As it uses the PUSHA/POPA instructions it only works in 80286 and
-higher.
+higher. 
 
 A small video of the game running over emulation:
 
@@ -23,10 +23,11 @@ If you want to assemble it, you must download the Netwide Assembler
 Use this command line:
 
   nasm -f bin invaders.asm -Dcom_file=1 -o invaders.com
+  nasm -f bin invaders.asm -Dcom_file=0 -o invaders.img
 
 Tested with VirtualBox for Mac OS X running Windows XP running this
 game, it also works with DosBox and probably with qemu:
 
-  qemu-system-x86_64 -fda invaders.com
+  qemu-system-x86_64 -fda invaders.img
 
 Enjoy it!
