@@ -18,11 +18,17 @@
         ;                        about thing being hit.
         ; Revision: Jun/03/2019. Optimized, 601 bytes as COM!!!
         ; Revision: Jun/04/2019. At last 512 bytes!
+        ; Revision: Jun/05/2019. By popular demand added pure8088 option.
         ;
 
         ;
         ; The usage of PUSHA and POPA means it requires 80286 or higher
         ;
+
+    %ifndef pure8088            ; If not defined create a 80286 binary
+pure8088:       equ 0           ; Enable this for pure 8088, caveat! it
+                                ; will exceed 512 bytes.
+    %endif
 
     %ifndef com_file            ; If not defined create a boot sector
 com_file:       equ 0
@@ -161,7 +167,14 @@ in2:
         ;
         inc bp
         and bp,7                ; Each 8 invaders
+    %if pure8088
+        push cx
+        push dx
+        push si
+        push bp
+    %else
         pusha
+    %endif
         jne in12
 in22:
         mov ah,0x00           
@@ -187,7 +200,13 @@ in12:
         mov al,[di]                     ; Read pixel
         sub al,0x20                     ; Hits invader?
         jc in30                         ; No, jump
+    %if pure8088
+        push si
+        push di
+        push bp
+    %else
         pusha
+    %endif
         mov ah,SPRITE_SIZE              ; The pixel indicates the...
         mul ah                          ; ...invader hit.
         add si,ax
@@ -196,7 +215,13 @@ in12:
         mov byte [si],0x20              ; Erase next time
         mov ax,INVADER_EXPLOSION_COLOR*0x0100+0x08      ; But explosion now
         call draw_sprite
+    %if pure8088
+        pop bp
+        pop di
+        pop si
+    %else
         popa
+    %endif
         jmp in31
 
         ;
@@ -281,7 +306,14 @@ in18:
         je in43
 in19:   mov [si],ax
 in43:
+    %if pure8088
+        pop bp
+        pop si
+        pop dx
+        pop cx
+    %else
         popa
+    %endif
 
         mov ax,[si]
         cmp dl,1                ; Going down (state 2)?
@@ -357,7 +389,15 @@ big_pixel:
         ; al = sprite (x8)
         ; di = Target address
 draw_sprite:
+    %if pure8088
+        push ax
+        push bx
+        push cx
+        push dx
+        push di
+    %else
         pusha
+    %endif
         mov dl,ah
         mov dh,ah
 in3:    push ax
@@ -374,7 +414,15 @@ in0:    call bit                ; Draw pixel
         inc ax                  ; Next bitmap byte
         test al,7               ; Sprite complete?
         jne in3                 ; No, jump
+    %if pure8088
+        pop di
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+    %else
         popa
+    %endif
         ret
 
         db 'O.T'                ; Rounding
