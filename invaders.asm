@@ -320,6 +320,8 @@ in43:
         jc in8                  ; No, jump
 in10:
     %if com_file
+        mov ax, 3
+        int 0x10
         int 0x20
     %else
         jmp $
@@ -426,7 +428,7 @@ in0:    call bit                ; Draw pixel
 
     %if pure8088
     %else
-        db 'Oscar'              ; Rounding
+        db 'OT'			; Rounding
     %endif
     %if com_file
     %else
