@@ -187,11 +187,10 @@ in12:
         ;
         ; Handle player bullet
         ;
-        mov bp,X_WIDTH
         mov si,shots                    ; Point to shots list
         mov cx,4                        ; 4 shots at most
         lodsw                           ; Read position (player)
-        cmp ax,bp                       ; Is it at top of screen?
+        cmp ax,X_WIDTH                  ; Is it at top of screen?
         xchg ax,di
         jc in31                         ; Erase bullet
                                         ; Doesn't mind doing it all time
@@ -203,7 +202,6 @@ in12:
     %if pure8088
         push si
         push di
-        push bp
     %else
         pusha
     %endif
@@ -216,7 +214,6 @@ in12:
         mov ax,INVADER_EXPLOSION_COLOR*0x0100+0x08      ; But explosion now
         call draw_sprite
     %if pure8088
-        pop bp
         pop di
         pop si
     %else
@@ -395,6 +392,7 @@ draw_sprite:
         push cx
         push dx
         push di
+        pushf
     %else
         pusha
     %endif
@@ -415,6 +413,7 @@ in0:    call bit                ; Draw pixel
         test al,7               ; Sprite complete?
         jne in3                 ; No, jump
     %if pure8088
+        popf
         pop di
         pop dx
         pop cx
@@ -425,6 +424,11 @@ in0:    call bit                ; Draw pixel
     %endif
         ret
 
-        db 'O.T'                ; Rounding
-
+    %if pure8088
+    %else
+        db 'Oscar'              ; Rounding
+    %endif
+    %if com_file
+    %else
         db 0x55,0xaa            ; Make it a bootable sector
+    %endif
