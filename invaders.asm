@@ -419,10 +419,6 @@ in0:    mov al,bh
 
     %if com_file
     %else
-    %if pure8088
-        db 'O'
-    %else
-        db 'OT'			; Rounding
-    %endif
+	times 510-($-$$) db 0
         db 0x55,0xaa            ; Make it a bootable sector
     %endif
