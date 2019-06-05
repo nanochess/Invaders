@@ -260,6 +260,10 @@ in23:   loop in24
         je in25
         int 0x16
 in25:   mov ch,ah                       ; New scancode key in CH or zero.
+    %if com_file
+        dec ah                          ; test for ESC and exit
+        jz in10
+    %endif
 
         mov si,sprites                  ; Point to spaceship
         lodsw
@@ -419,6 +423,6 @@ in0:    mov al,bh
 
     %if com_file
     %else
-	times 510-($-$$) db 0
+        times 510-($-$$) db 0
         db 0x55,0xaa            ; Make it a bootable sector
     %endif
