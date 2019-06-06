@@ -21,6 +21,9 @@
         ; Revision: Jun/05/2019. By popular demand added pure8088 option. Now
         ;                        the 8088 version also is bootable! so now
         ;                        8088 is the default.
+        ; Revision: Jun/06/2019. jtsiomb made the point that the COM file
+        ;                        doesn't need to be 512 bytes, so Esc for
+        ;                        exiting and also returns to text mode.
         ;
 
         ;
@@ -28,7 +31,7 @@
         ; default.
         ;
 
-    %ifndef pure8088            ; If not defined create a 80286 binary
+    %ifndef pure8088            ; Define as 1 to create a 80186/80286 binary
 pure8088:       equ 1           ; Enable this for pure 8088
     %endif
 
@@ -423,6 +426,6 @@ in0:    mov al,bh
 
     %if com_file
     %else
-        times 510-($-$$) db 0
+        times 510-($-$$) db 0x4f
         db 0x55,0xaa            ; Make it a bootable sector
     %endif
