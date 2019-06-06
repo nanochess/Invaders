@@ -260,6 +260,10 @@ in23:   loop in24
         je in25
         int 0x16
 in25:   mov ch,ah                       ; New scancode key in CH or zero.
+    %if com_file
+        dec ah                          ; test for ESC and exit
+        jz in10
+    %endif
 
         mov si,sprites                  ; Point to spaceship
         lodsw
@@ -318,6 +322,8 @@ in43:
         jc in8                  ; No, jump
 in10:
     %if com_file
+        mov ax, 3
+        int 0x10
         int 0x20
     %else
         jmp $
@@ -415,12 +421,8 @@ in0:    mov al,bh
     %endif
         ret
 
-    %if pure8088
-        db 'O'
-    %else
-        db 'OscarToledo'        ; Rounding
-    %endif
     %if com_file
     %else
+        times 510-($-$$) db 0
         db 0x55,0xaa            ; Make it a bootable sector
     %endif
