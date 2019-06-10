@@ -31,8 +31,8 @@
         ; default.
         ;
 
-    %ifndef pure8088            ; Define as 1 to create a 80186/80286 binary
-pure8088:       equ 1           ; Enable this for pure 8088
+    %ifndef pure8088            ; Define as 0 to create a 80186/80286 binary
+pure8088:       equ 1           ; Enabled by default for pure 8088 assembler
     %endif
 
     %ifndef com_file            ; If not defined create a boot sector
@@ -66,16 +66,16 @@ BULLET_COLOR:           equ 0x0c
 START_COLOR:    equ ((sprites+SPRITE_SIZE-(shots+2))/SPRITE_SIZE+0x20)        
 
     %if com_file
-        org 0x0100
+        org 0x0100      ; Start position for COM files
     %else
-        org 0x7c00
+        org 0x7c00      ; Start position for boot sector
     %endif
         mov ax,0x0013   ; Set mode 0x13 (320x200x256 VGA)
         int 0x10        ; Call BIOS
         cld
-        mov ax,0xa000
-        mov ds,ax
-        mov es,ax
+        mov ax,0xa000   ; Point to screen memory
+        mov ds,ax       ; Both DS...
+        mov es,ax       ; ...and ES
         mov ah,0x04
         mov [level],ax  ; Level = 0, Lives = 4
 restart_game:
@@ -108,11 +108,11 @@ restart_game:
         mov ax,0x08*OFFSET_X+0x28
         mov bx,START_COLOR*0x0100+0x10
 in1:    mov cl,0x0b             ; Eleven invaders per row
-in5:    stosw
-        add ax,0x0b*2
+in5:    stosw                   ; Set invader position
+        add ax,0x0b*2           ; Go to next column
         xchg ax,bx
-        stosw
-        inc ah
+        stosw                   ; Set invader color and shape
+        inc ah                  ; Go to next color
         xchg ax,bx
         loop in5                ; Loop and also makes sure ch is zero
         add ax,0x09*OFFSET_X-0x000b*0x000b*2    ; Go to next row
@@ -135,24 +135,24 @@ in14:
         ; BP = frame counter
         ;
 in46:
-        cmp byte [si+2],0x20    ; Is it cosmic debris?
+        cmp byte [si+2],0x20    ; Current invader is cosmic debris?
         jc in2                  ; No, jump
-        inc ch
+        inc ch                  ; Count another dead invader
         cmp ch,55               ; All invaders defeated?
         je restart_game         ; Yes, jump.
         ;
         ; Yes, invaders speed up
         ;
 in6:
-        lodsw                   ; Load coordinates in ax
-        xchg ax,di
+        lodsw                   ; Load position in AX
+        xchg ax,di              ; Move to DI
         lodsw                   ; Get type of sprite
         cmp al,0x28             ; Destroyed?
         je in27                 ; Yes, jump
         cmp al,0x20             ; Explosion?
         jne in29                ; No, jump
         mov byte [si-2],0x28    ; Don't draw again
-in29:   call draw_sprite
+in29:   call draw_sprite        ; Draw invader on screen
 in27:   cmp si,sprites+56*SPRITE_SIZE     ; Whole board revised?
         jne in46                ; No, jump
         mov al,dh
@@ -183,7 +183,7 @@ in22:
         int 0x1a                ; BIOS clock read
         cmp dx,[old_time]       ; Wait for change
         je in22
-        mov [old_time],dx
+        mov [old_time],dx       ; Save new current time
 in12:
     %if 1
         ;
@@ -214,7 +214,7 @@ in12:
         xchg ax,di
         mov byte [si],0x20              ; Erase next time
         mov ax,INVADER_EXPLOSION_COLOR*0x0100+0x08      ; But explosion now
-        call draw_sprite
+        call draw_sprite                ; Draw sprite
     %if pure8088
         pop di
         pop si
@@ -239,18 +239,18 @@ in24:
         ; Draw bullet
 in30:
         mov ax,BULLET_COLOR*0x0100+BULLET_COLOR
-        mov [si-2],di
+        mov [si-2],di                   ; Update position of bullet
         jmp in7
 
         ; Remove bullet
-in31:   xor ax,ax
-        mov [si-2],ax                   ; AX contains zero
+in31:   xor ax,ax                       ; AX contains zero (DI unaffected)
+        mov [si-2],ax                   ; Delete bullet from table
 
 in7:    cmp byte [di],SPACESHIP_COLOR   ; Check for crash against player
         jne in41                        ; No, jump
-        mov word [sprites],SHIP_EXPLOSION_COLOR*0x0100+0x38
+        mov word [sprites],SHIP_EXPLOSION_COLOR*0x0100+0x38 ; Player explosion
 in41:
-        call big_pixel
+        call big_pixel                  ; Draw/erase bullet
 in23:   loop in24
     %endif
 
@@ -269,7 +269,7 @@ in25:   mov ch,ah                       ; New scancode key in CH or zero.
     %endif
 
         mov si,sprites                  ; Point to spaceship
-        lodsw
+        lodsw                           ; Load sprite frame / color
         or al,al                        ; Explosion?
         je in42                         ; No, jump
         add al,0x08                     ; Keep explosion
@@ -277,16 +277,16 @@ in25:   mov ch,ah                       ; New scancode key in CH or zero.
         mov ah,SPACESHIP_COLOR          ; Restore color (sprite already)
         dec byte [lives]                ; Remove one life
         js in10                         ; Exit if all used
-in42:   mov [si-2],ax
-        mov di,[si]
-        call draw_sprite                ; Draw spaceship
+in42:   mov [si-2],ax                   ; Save new frame / color
+        mov di,[si]                     ; Load position
+        call draw_sprite                ; Draw sprite (spaceship)
         jne in43                        ; Jump if still explosion
 
         mov al,[xdir]                   ; Current X-direction
 
         cmp ch,0x39                     ; Space key?
         jne in35                        ; No, jump
-        xor ax,ax
+        xor ax,ax                       ; Stop movement
         cmp ax,[shots]                  ; Bullet available?
         jne in35                        ; No, jump
         lea bx,[di+(0x04*2)]            ; Offset from spaceship
@@ -294,20 +294,20 @@ in42:   mov [si-2],ax
 in35:
         cmp ch,0x4b                     ; Left key?
         jne in17                        ; No, jump
-        mov al,-2
+        mov al,-2                       ; Move 2 pixels to left
 
 in17:   cmp ch,0x4d                     ; Right key?
         jne in18                        ; No, jump
-        mov al,2
+        mov al,2                        ; Move 2 pixels to right
 in18:
         mov [xdir],al                   ; Save direction
-        cbw
+        cbw                             ; Extend AL with sign into AX
         add ax,di                       ; Move spaceship
         cmp ax,SHIP_ROW-2               ; Update only if not exceeded border
         je in43
         cmp ax,SHIP_ROW+0x0132
         je in43
-in19:   mov [si],ax
+in19:   mov [si],ax                     ; Update position
 in43:
     %if pure8088
         pop bp
@@ -317,19 +317,19 @@ in43:
         popa
     %endif
 
-        mov ax,[si]
+        mov ax,[si]             ; Get position of current invader
         cmp dl,1                ; Going down (state 2)?
         jbe in9                 ; No, jump
-        add ax,0x0280
+        add ax,0x0280           ; Go down by 2 pixels
         cmp ax,0x55*0x280       ; Reaches Earth?
         jc in8                  ; No, jump
 in10:
     %if com_file
-        mov ax, 3
+        mov ax, 3               ; Restore text mode
         int 0x10
-        int 0x20
+        int 0x20                ; Exit to DOS
     %else
-        jmp $
+        jmp $                   ; Make love, not crash
     %endif
 
 in9:    dec ax                  ; Moving to left
@@ -337,11 +337,11 @@ in9:    dec ax                  ; Moving to left
         jc in20
         add ax,4                ; Moving to right
 in20:   push ax
-        shr ax,1
-        mov cl,0xa0
-        div cl
-        dec ah
-        cmp ah,0x94             ; Border touched?
+        shr ax,1                ; Divide position by 2...
+        mov cl,0xa0             ; ...means we can get column dividing by 0xa0
+        div cl                  ; ...instead of 0x0140 (longer code)
+        dec ah                  ; Convert 0x00 to 0xff
+        cmp ah,0x94             ; Border touched? (>= 0x94)
         pop ax
         jb in8                  ; No, jump
         or dh,22                ; Goes down by 11 pixels (11 * 2) must be odd
@@ -350,9 +350,9 @@ in8:    mov [si],ax
         xchg ax,bx
 
         mov cx,3        ; ch = 0 invader alive
-        in al,(0x40)
-        cmp al,0xfc
-        jc in4
+        in al,(0x40)    ; Read timer
+        cmp al,0xfc     ; Random happening?
+        jc in4          ; No, jump
         ;
         ; Doesn't work in my computer:
         ;
@@ -362,15 +362,18 @@ in8:    mov [si],ax
         ; mov [di-2],bx
         ;
         mov di,shots+2
-in45:   cmp word [di],0
-        je in44
-        scasw
-        loop in45
+in45:   cmp word [di],0 ; Search for free slot
+        je in44         ; It is, jump!
+        scasw           ; Advance DI
+        loop in45       ; Until 3 slots searched
 in44:
-        mov [di],bx     ; Start invader shot
+        mov [di],bx     ; Start invader shot (or put in ignored slot)
 in4:
         jmp in6
 
+        ;
+        ; Bitmaps for sprites
+        ;
 bitmaps:
         db 0x18,0x18,0x3c,0x24,0x3c,0x7e,0xFf,0x24      ; Spaceship
         db 0x00,0x80,0x42,0x18,0x10,0x48,0x82,0x01      ; Explosion
@@ -379,10 +382,11 @@ bitmaps:
         db 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00      ; Erase
 
         ;
-        ; Draw 1 pixel inside reg. al (bit 7)
+        ; Draw pixel per carry (use AX if carry=1 or zero if carry=0)
         ;
 bit:    jc big_pixel
 zero:   xor ax,ax
+        ; Draw a big pixel (2x2 pixels)
 big_pixel:
         mov [di+X_WIDTH],ax
         stosw
@@ -402,10 +406,10 @@ draw_sprite:
 in3:    push ax
         mov bx,bitmaps
         cs xlat                 ; Extract one byte from bitmap
-        xchg ax,bx
+        xchg ax,bx              ; bl contains byte, bh contains color
         mov cx,10               ; Two extra zero pixels at left and right
         clc                     ; Left pixel as zero (clean)
-in0:    mov al,bh
+in0:    mov al,bh               ; Duplicate color in AX
         mov ah,bh
         call bit                ; Draw pixel
         shl bl,1
