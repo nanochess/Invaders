@@ -24,6 +24,13 @@
         ; Revision: Jun/06/2019. jtsiomb made the point that the COM file
         ;                        doesn't need to be 512 bytes, so Esc for
         ;                        exiting and also returns to text mode.
+        ; Revision: Jun/29/2019. Now spaceship moves to left pressing Ctrl,
+        ;                        to right pressing Alt, and shoots pressing
+        ;                        Shift. Spaceship stops when you depress the
+        ;                        direction key. To exit you press Scroll
+        ;                        Lock. Used the extra bytes to implement
+        ;                        defenses that stop the invaders' bullets.
+        ;                        (suggested in Reddit by nils-m-holm).
         ;
 
         ;
@@ -33,6 +40,8 @@
 
     %ifndef pure8088            ; Define as 0 to create a 80186/80286 binary
 pure8088:       equ 1           ; Enabled by default for pure 8088 assembler
+
+        cpu 8086
     %endif
 
     %ifndef com_file            ; If not defined create a boot sector
@@ -45,7 +54,6 @@ shots:          equ base+0x00   ; Space to contain 4 shots (2 bytes each one)
                                 ; Plus space for a ignored shot (full table)
                                 ; Notice (sprites + SPRITE_SIZE) - (shots + 2)
                                 ; must be divisible by SPRITE_SIZE.
-xdir:           equ base+0x0a   ; X direction of player
 old_time:       equ base+0x0c   ; Old time
 level:          equ base+0x10   ; Current level number
 lives:          equ base+0x11   ; Current lives
@@ -60,6 +68,7 @@ SPRITE_SIZE:    equ 4           ; Size of each sprite in bytes
         ; All colors different (important to distinguish things)
         ;
 SPACESHIP_COLOR:        equ 0x1c        ; Must be below 0x20
+DEFENSE_COLOR:          equ 0x0b
 SHIP_EXPLOSION_COLOR:   equ 0x0a
 INVADER_EXPLOSION_COLOR:        equ 0x0e
 BULLET_COLOR:           equ 0x0c
@@ -118,6 +127,17 @@ in5:    stosw                   ; Set invader position
         add ax,0x09*OFFSET_X-0x000b*0x000b*2    ; Go to next row
         cmp bh,START_COLOR+55   ; Whole board finished?
         jne in1                 ; No, jump
+
+        ;
+        ; Draw the barriers
+        ;
+        mov di,0x55*0x280+0x10*2
+        mov cl,5
+in48:
+        mov ax,DEFENSE_COLOR*0x0100+0x04
+        call draw_sprite
+        add di,0x1e*2
+        loop in48
 
         ; CH is zero
 
@@ -240,7 +260,8 @@ in24:
 in30:
         mov ax,BULLET_COLOR*0x0100+BULLET_COLOR
         mov [si-2],di                   ; Update position of bullet
-        jmp in7
+        cmp byte [di+X_WIDTH],DEFENSE_COLOR     ; Defense in path?
+        jne in7                         ; Yes, erase bullet and defense pixel
 
         ; Remove bullet
 in31:   xor ax,ax                       ; AX contains zero (DI unaffected)
@@ -257,17 +278,6 @@ in23:   loop in24
         ;
         ; Spaceship handling
         ;
-        mov ah,0x01                     ; BIOS Key available
-        int 0x16
-        mov ah,0x00                     ; BIOS Read Key
-        je in25
-        int 0x16
-in25:   mov ch,ah                       ; New scancode key in CH or zero.
-    %if com_file
-        dec ah                          ; test for ESC and exit
-        jz in10
-    %endif
-
         mov si,sprites                  ; Point to spaceship
         lodsw                           ; Load sprite frame / color
         or al,al                        ; Explosion?
@@ -282,27 +292,31 @@ in42:   mov [si-2],ax                   ; Save new frame / color
         call draw_sprite                ; Draw sprite (spaceship)
         jne in43                        ; Jump if still explosion
 
-        mov al,[xdir]                   ; Current X-direction
+        mov ah,0x02                     ; BIOS Get Keyboard Flags 
+        int 0x16
+    %if com_file
+        test al,0x10                    ; test for Scroll Lock and exit
+        jnz in10
+    %endif
 
-        cmp ch,0x39                     ; Space key?
-        jne in35                        ; No, jump
-        xor ax,ax                       ; Stop movement
-        cmp ax,[shots]                  ; Bullet available?
-        jne in35                        ; No, jump
-        lea bx,[di+(0x04*2)]            ; Offset from spaceship
-        mov [shots],bx                  ; Start bullet
-in35:
-        cmp ch,0x4b                     ; Left key?
-        jne in17                        ; No, jump
-        mov al,-2                       ; Move 2 pixels to left
+        test al,0x04                    ; Ctrl key?
+        jz in17                         ; No, jump
+        dec di                          ; Move 2 pixels to left
+        dec di
 
-in17:   cmp ch,0x4d                     ; Right key?
-        jne in18                        ; No, jump
-        mov al,2                        ; Move 2 pixels to right
+in17:   test al,0x08                    ; Alt key?
+        jz in18                         ; No, jump
+        inc di                          ; Move 2 pixels to right
+        inc di
 in18:
-        mov [xdir],al                   ; Save direction
-        cbw                             ; Extend AL with sign into AX
-        add ax,di                       ; Move spaceship
+        test al,0x03                    ; Shift keys?
+        jz in35                         ; No, jump
+        cmp word [shots],0              ; Bullet available?
+        jne in35                        ; No, jump
+        lea ax,[di+(0x04*2)]            ; Offset from spaceship
+        mov [shots],ax                  ; Start bullet
+in35:
+        xchg ax,di
         cmp ax,SHIP_ROW-2               ; Update only if not exceeded border
         je in43
         cmp ax,SHIP_ROW+0x0132
@@ -325,7 +339,7 @@ in43:
         jc in8                  ; No, jump
 in10:
     %if com_file
-        mov ax, 3               ; Restore text mode
+        mov ax,0x0003           ; Restore text mode
         int 0x10
         int 0x20                ; Exit to DOS
     %else

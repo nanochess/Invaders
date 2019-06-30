@@ -13,9 +13,14 @@ This a game recreating the Invaders game in 512 bytes, that can be
 run as a COM file or put into a boot sector of a floppy disk to be
 run.
 
-Move with keyboard arrows to left and right, press Space to shoot.
+Move with Ctrl key to left, Alt key to right, any Shift key to
+shoot. (maybe you'll need to disable StickyKeys in Windows)
 
-Now it's compatible with 8088 (the original IBM PC) but it still
+The previous commit worked with left arrow, right arrow and space
+key, but you had to press the space key to stop the spaceship.
+Also didn't have the defenses.
+
+Now it's compatible with 8088 (the original IBM PC) but still it
 has the option for 80286 code in the source code. So you now have
 to look for a 8-bit compatible VGA card if you want to run it in
 original hardware ;)
