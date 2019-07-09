@@ -2,6 +2,7 @@
         ; Invaders in 512 bytes
         ;
         ; by Oscar Toledo G.
+        ; http://nanochess.org/
         ;
         ; (c) Copyright 2015-2019 Oscar Toledo G.
         ;
