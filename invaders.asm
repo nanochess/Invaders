@@ -2,7 +2,6 @@
         ; Invaders in 512 bytes
         ;
         ; by Oscar Toledo G.
-        ; http://nanochess.org/
         ;
         ; (c) Copyright 2015-2019 Oscar Toledo G.
         ;
@@ -30,7 +29,7 @@
         ;                        Shift. Spaceship stops when you depress the
         ;                        direction key. To exit you press Scroll
         ;                        Lock. Used the extra bytes to implement
-        ;                        defenses that stop the invaders' bullets.
+        ;                        barriers that stop the invaders' bullets.
         ;                        (suggested in Reddit by nils-m-holm).
         ;
 
@@ -69,7 +68,7 @@ SPRITE_SIZE:    equ 4           ; Size of each sprite in bytes
         ; All colors different (important to distinguish things)
         ;
 SPACESHIP_COLOR:        equ 0x1c        ; Must be below 0x20
-DEFENSE_COLOR:          equ 0x0b
+BARRIER_COLOR:          equ 0x0b
 SHIP_EXPLOSION_COLOR:   equ 0x0a
 INVADER_EXPLOSION_COLOR:        equ 0x0e
 BULLET_COLOR:           equ 0x0c
@@ -124,7 +123,7 @@ in5:    stosw                   ; Set invader position
         stosw                   ; Set invader color and shape
         inc ah                  ; Go to next color
         xchg ax,bx
-        loop in5                ; Loop and also makes sure ch is zero
+        loop in5                ; Loop and also make sure ch is zero
         add ax,0x09*OFFSET_X-0x000b*0x000b*2    ; Go to next row
         cmp bh,START_COLOR+55   ; Whole board finished?
         jne in1                 ; No, jump
@@ -135,7 +134,7 @@ in5:    stosw                   ; Set invader position
         mov di,0x55*0x280+0x10*2
         mov cl,5
 in48:
-        mov ax,DEFENSE_COLOR*0x0100+0x04
+        mov ax,BARRIER_COLOR*0x0100+0x04
         call draw_sprite
         add di,0x1e*2
         loop in48
@@ -261,14 +260,14 @@ in24:
 in30:
         mov ax,BULLET_COLOR*0x0100+BULLET_COLOR
         mov [si-2],di                   ; Update position of bullet
-        cmp byte [di+X_WIDTH],DEFENSE_COLOR     ; Defense in path?
-        jne in7                         ; Yes, erase bullet and defense pixel
+        cmp byte [di+X_WIDTH],BARRIER_COLOR     ; Barrier in path?
+        jne in7                         ; Yes, erase bullet and barrier pixel
 
         ; Remove bullet
 in31:   xor ax,ax                       ; AX contains zero (DI unaffected)
         mov [si-2],ax                   ; Delete bullet from table
 
-in7:    cmp byte [di],SPACESHIP_COLOR   ; Check for crash against player
+in7:    cmp byte [di],SPACESHIP_COLOR   ; Check collision with player
         jne in41                        ; No, jump
         mov word [sprites],SHIP_EXPLOSION_COLOR*0x0100+0x38 ; Player explosion
 in41:
@@ -364,9 +363,9 @@ in8:    mov [si],ax
         add ax,0x06*0x280+0x03*2        ; Offset for bullet
         xchg ax,bx
 
-        mov cx,3        ; ch = 0 invader alive
+        mov cx,3        ; ch = 0 - invader alive
         in al,(0x40)    ; Read timer
-        cmp al,0xfc     ; Random happening?
+        cmp al,0xfc     ; Random event happening?
         jc in4          ; No, jump
         ;
         ; Doesn't work in my computer:

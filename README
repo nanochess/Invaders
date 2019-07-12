@@ -18,11 +18,11 @@ shoot. (maybe you'll need to disable StickyKeys in Windows)
 
 The previous commit worked with left arrow, right arrow and space
 key, but you had to press the space key to stop the spaceship.
-Also didn't have the defenses.
+Also didn't have the barriers.
 
 Now it's compatible with 8088 (the original IBM PC) but still it
 has the option for 80286 code in the source code. So you now have
-to look for a 8-bit compatible VGA card if you want to run it in
+to look for a 8-bit compatible VGA card if you want to run it over
 original hardware ;)
 
 A small video of the game running over emulation:
