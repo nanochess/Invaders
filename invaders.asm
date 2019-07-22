@@ -295,7 +295,7 @@ in42:   mov [si-2],ax                   ; Save new frame / color
         mov ah,0x02                     ; BIOS Get Keyboard Flags 
         int 0x16
     %if com_file
-        test al,0x10                    ; test for Scroll Lock and exit
+        test al,0x10                    ; Test for Scroll Lock and exit
         jnz in10
     %endif
 
@@ -317,7 +317,7 @@ in18:
         mov [shots],ax                  ; Start bullet
 in35:
         xchg ax,di
-        cmp ax,SHIP_ROW-2               ; Update only if not exceeded border
+        cmp ax,SHIP_ROW-2               ; Update if not touching border
         je in43
         cmp ax,SHIP_ROW+0x0132
         je in43
@@ -341,10 +341,8 @@ in10:
     %if com_file
         mov ax,0x0003           ; Restore text mode
         int 0x10
-        int 0x20                ; Exit to DOS
-    %else
-        jmp $                   ; Make love, not crash
     %endif
+        int 0x20                ; Exit to DOS
 
 in9:    dec ax                  ; Moving to left
         dec ax
@@ -377,7 +375,7 @@ in8:    mov [si],ax
         ;
         mov di,shots+2
 in45:   cmp word [di],0 ; Search for free slot
-        je in44         ; It is, jump!
+        je in44         ; It's free, jump!
         scasw           ; Advance DI
         loop in45       ; Until 3 slots searched
 in44:
