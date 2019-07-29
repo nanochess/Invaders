@@ -394,7 +394,7 @@ bitmaps:
         db 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00      ; Erase
 
         ;
-        ; Draw pixel per carry (use AX if carry=1 or zero if carry=0)
+        ; Draw pixel per Carry (use AX if Carry=1 or zero if Carry=0)
         ;
 bit:    jc big_pixel
 zero:   xor ax,ax

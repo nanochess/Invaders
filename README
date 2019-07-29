@@ -43,3 +43,31 @@ game, it also works with DosBox and probably with qemu:
   qemu-system-x86_64 -fda invaders.img
 
 Enjoy it!
+
+
+>> THE BOOK <<        
+
+Do you would like more details on the inner workings? This program
+is fully commented in my new book Programming Boot Sector Games
+and you'll also find a 8086/8088 crash course!
+
+Now available from Lulu:
+
+  Soft-cover
+    http://www.lulu.com/shop/oscar-toledo-gutierrez/programming-boot-sector-games/paperback/product-24188564.html
+
+  Hard-cover
+    http://www.lulu.com/shop/oscar-toledo-gutierrez/programming-boot-sector-games/hardcover/product-24188530.html
+
+These are some of the example programs documented profusely
+in the book:
+
+  * Guess the number.
+  * Tic-Tac-Toe game.
+  * Text graphics.
+  * Mandelbrot set.
+  * F-Bird game.
+  * Invaders game.
+  * Pillman game.
+  * Toledo Atomchess.
+  * bootBASIC language.
